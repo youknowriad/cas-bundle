@@ -1,0 +1,39 @@
+<?xml version="1.0" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+   <parameters>
+       <parameter key="auth_cas_service.class">Rizeway\Bundle\CasBundle\Lib\CAS</parameter>
+       <parameter key="auth_cas_listener_class">Rizeway\Bundle\CasBundle\Security\Firewall\CasListener</parameter>
+       <parameter key="auth_cas_entry_point.class">Rizeway\Bundle\CasBundle\Security\Http\EntryPoint\CasAuthenticationEntryPoint</parameter>
+       <parameter key="auth_cas_logout_handler.class">Rizeway\Bundle\CasBundle\Security\Handler\LogoutSuccessHandler</parameter>
+   </parameters>
+
+   <services>
+        <service id="cas.service" class="%auth_cas_service.class%">
+            <argument>%rizeway_cas.server%</argument>
+            <argument>%rizeway_cas.port%</argument>
+            <argument>%rizeway_cas.path%</argument>
+            <argument>%rizeway_cas.cert%</argument>
+            <argument>%rizeway_cas.protocol%</argument>
+            <argument>%rizeway_cas.username_attribute%</argument>
+            <argument>%rizeway_cas.validation_url%</argument>
+        </service>
+
+        <service id="cas.security.authentication.listener"
+                 class="%auth_cas_listener_class%"
+                 parent="security.authentication.listener.abstract"
+                 abstract="true">
+        </service>
+
+        <service id="cas.security.handler.logout" class="%auth_cas_logout_handler.class%">
+            <argument type="service" id="cas.service" />
+        </service>
+
+        <service id="cas.security.authentication.cas_entry_point" class="%auth_cas_entry_point.class%" public="false" abstract="true">
+            <argument type="service" id="http_kernel" />
+        </service>
+   </services>
+</container>

@@ -1,0 +1,21 @@
+{
+    "name": "rizeway/cas-bundle",
+    "type": "symfony-bundle",
+    "description": "CAs Authentification using PHP CAS",
+    "keywords": ["cas", "security"],
+    "license": "MIT",
+    "require": {
+        "php": ">=5.3.3",
+        "gorg/phpcas": "dev-master"
+    },
+    "autoload": {
+        "psr-0": { "Rizeway\\Bundle\\CasBundle": "" }
+    },
+    "minimum-stability": "dev",
+    "target-dir": "Rizeway/Bundle/CasBundle",
+    "extra": {
+        "branch-alias": {
+            "dev-master": "0.1.x-dev"
+        }
+    }
+}
