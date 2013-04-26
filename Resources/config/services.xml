@@ -6,9 +6,9 @@
 
    <parameters>
        <parameter key="auth_cas_service.class">Rizeway\Bundle\CasBundle\Lib\CAS</parameter>
-       <parameter key="auth_cas_listener_class">Rizeway\Bundle\CasBundle\Security\Firewall\CasListener</parameter>
-       <parameter key="auth_cas_entry_point.class">Rizeway\Bundle\CasBundle\Security\Http\EntryPoint\CasAuthenticationEntryPoint</parameter>
-       <parameter key="auth_cas_logout_handler.class">Rizeway\Bundle\CasBundle\Security\Handler\LogoutSuccessHandler</parameter>
+       <parameter key="auth_cas_listener_class">Rizeway\Bundle\CasBundle\Security\CasListener</parameter>
+       <parameter key="auth_cas_entry_point.class">Rizeway\Bundle\CasBundle\Security\CasAuthenticationEntryPoint</parameter>
+       <parameter key="auth_cas_logout_handler.class">Rizeway\Bundle\CasBundle\Security\LogoutSuccessHandler</parameter>
    </parameters>
 
    <services>
