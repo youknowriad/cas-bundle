@@ -7,8 +7,6 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Http\Logout\LogoutSuccessHandlerInterface;
 
-require_once(dirname(__FILE__) . '/../../../../../../gorg/phpcas/CAS.php');
-
 class LogoutSuccessHandler implements LogoutSuccessHandlerInterface
 {
     /**

@@ -23,8 +23,6 @@ use Symfony\Component\Security\Core\SecurityContextInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Security\Core\Authentication\Token\PreAuthenticatedToken;
 
-require_once(dirname(__FILE__) . '/../../../../../../gorg/phpcas/CAS.php');
-
 class CasListener implements ListenerInterface
 {
     /**
