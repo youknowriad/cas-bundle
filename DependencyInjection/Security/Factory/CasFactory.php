@@ -69,8 +69,7 @@ class CasFactory extends AbstractFactory
         $listener->replaceArgument(4, $id);
         $listener->replaceArgument(5, new Reference($this->createAuthenticationSuccessHandler($container, $id, $config)));
         $listener->replaceArgument(6, new Reference($this->createAuthenticationFailureHandler($container, $id, $config)));
-        $listener->replaceArgument(7, array_intersect_key($config, $this->options));
-        $listener->addArgument(new Reference('cas.service'));
+        $listener->replaceArgument(9, $config['check_path']);
 
         $listenerId .= '.'.$id;
         $container->setDefinition($listenerId, $listener);

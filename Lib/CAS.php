@@ -4,58 +4,112 @@ namespace Rizeway\Bundle\CasBundle\Lib;
 
 class CAS
 {
-
+    /**
+     * @var string
+     */
     protected $server;
-    protected $port;
-    protected $path;
-    protected $cert;
-    protected $protocol;
-    protected $usernameAttribute;
-    protected $validationUrl;
 
-    public function __construct($server, $port, $path, $cert, $protocol, $usernameAttribute, $validationUrl)
+    /**
+     * @var string
+     */
+    protected $url;
+
+    /**
+     * @var string
+     */
+    protected $cert;
+
+    /**
+     * @var string
+     */
+    protected $usernameAttribute;
+
+    /**
+     * @var bool
+     */
+    protected $proxy;
+
+    /**
+     * @param string $url
+     * @param string $server
+     * @param string $cert
+     * @param string $usernameAttribute
+     * @param boolean $proxy
+     */
+    public function __construct($url, $server, $cert, $usernameAttribute, $proxy)
     {
-        $this->server = $server;
-        $this->port = $port;
-        $this->path = $path;
+        $this->server = $server ? $server : $url;
+        $this->url = $url;
         $this->cert = $cert;
-        $this->protocol = $protocol;
         $this->usernameAttribute = $usernameAttribute;
-        $this->validationUrl = $validationUrl;
+        $this->proxy = $proxy;
     }
 
+    /**
+     * @return bool
+     */
+    public function isProxy()
+    {
+        return $this->proxy;
+    }
+
+    /**
+     * @return string
+     */
     public function getCert()
     {
         return $this->cert;
     }
 
-    public function getPath()
+    /**
+     * @param string $serviceUrl
+     * @return string
+     */
+    public function getLoginUrl($serviceUrl)
     {
-        return $this->path;
+        return sprintf('%s/login?service=%s', $this->url, urlencode($serviceUrl));
     }
 
-    public function getPort()
+    public function getLogoutUrl()
     {
-        return $this->port;
+        return sprintf('%s/logout', $this->url);
     }
 
-    public function getProtocol()
+    /**
+     * @param $serviceUrl
+     * @param $serviceTicket
+     * @return string
+     * @throws \Exception
+     */
+    public function getValidationUrl($serviceUrl, $serviceTicket)
     {
-        return $this->protocol;
+        if ($this->isProxy()) {
+            throw new \Exception('You should not call this method in proxy mode');
+        }
+
+        return sprintf('%s/serviceValidate?service=%s&ticket=%s',
+            $this->server, urlencode($serviceUrl), $serviceTicket);
     }
 
-    public function getServer()
+    /**
+     * @param $serviceUrl
+     * @param $serviceTicket
+     * @param $proxyCallback
+     * @return string
+     * @throws \Exception
+     */
+    public function getProxyValidationUrl($serviceUrl, $serviceTicket, $proxyCallback)
     {
-        return $this->server;
+        if (!$this->isProxy()) {
+            throw new \Exception('You should call this method only in proxy mode');
+        }
+
+        return sprintf('%s/serviceValidate?service=%s&ticket=%s&pgtUrl=%s',
+            $this->server, urlencode($serviceUrl), $serviceTicket, urlencode($proxyCallback));
     }
 
     public function getUsernameAttribute()
     {
         return $this->usernameAttribute;
-    }
-
-    public function getValidationUrl()
-    {
-        return $this->validationUrl;
     }
 }

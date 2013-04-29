@@ -15,13 +15,11 @@ class Configuration implements ConfigurationInterface
         $treeBuilder = new TreeBuilder();
         $treeBuilder->root('rizeway_cas')
             ->children()
-                ->scalarNode('server')->end()
-                ->variableNode('port')->end()
-                ->scalarNode('path')->end()
-                ->scalarNode('cert')->end()
-                ->scalarNode('protocol')->defaultValue('S1')->end()
+                ->scalarNode('server')->defaultFalse()->end()
+                ->variableNode('url')->end()
+                ->scalarNode('cert')->defaultFalse()->end()
                 ->scalarNode('username_attribute')->end()
-                ->scalarNode('validation_url')->defaultFalse()->end()
+                ->scalarNode('proxy')->defaultFalse()->end()
             ->end()
         ;
 

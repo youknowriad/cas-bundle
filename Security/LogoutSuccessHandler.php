@@ -3,6 +3,7 @@
 namespace Rizeway\Bundle\CasBundle\Security;
 
 use Rizeway\Bundle\CasBundle\Lib\CAS;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Http\Logout\LogoutSuccessHandlerInterface;
 
@@ -25,9 +26,6 @@ class LogoutSuccessHandler implements LogoutSuccessHandlerInterface
 
     public function onLogoutSuccess(Request $request)
     {
-        \phpCAS::client($this->cas->getProtocol(), $this->cas->getServer(), $this->cas->getPort(), $this->cas->getPath(), false);
-        \phpCAS::logout();
-
-        return null;
+        return new RedirectResponse($this->cas->getLogoutUrl());
     }
 }

@@ -22,12 +22,11 @@ Installation
 Edit app/config/config.yml and add the your configuration
 
     rizeway_cas:
-        server: server.com
-        port: 443
-        path: /cas/
-        cert: /my-key.cert
-        protocol: '2.0'
+        url: casServer.com:443/cas
+        server: casServer.localhost:443/cas # (only if different from the url, for server to server requests)
+        cert: /my-key.cert # false to bypass
         username_attribute: login
+        proxy: true # if you want to active the proxy cas mode
 
 ### 4- Edit app/config/security.yml file to add your provider and firewall
 

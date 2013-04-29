@@ -13,19 +13,27 @@
 
    <services>
         <service id="cas.service" class="%auth_cas_service.class%">
+            <argument>%rizeway_cas.url%</argument>
             <argument>%rizeway_cas.server%</argument>
-            <argument>%rizeway_cas.port%</argument>
-            <argument>%rizeway_cas.path%</argument>
             <argument>%rizeway_cas.cert%</argument>
-            <argument>%rizeway_cas.protocol%</argument>
             <argument>%rizeway_cas.username_attribute%</argument>
-            <argument>%rizeway_cas.validation_url%</argument>
+            <argument>%rizeway_cas.proxy%</argument>
         </service>
 
         <service id="cas.security.authentication.listener"
                  class="%auth_cas_listener_class%"
-                 parent="security.authentication.listener.abstract"
                  abstract="true">
+            <tag name="monolog.logger" channel="security" />
+            <argument type="service" id="security.context" />
+            <argument type="service" id="security.authentication.manager" />
+            <argument type="service" id="security.authentication.session_strategy" />
+            <argument type="service" id="security.http_utils" />
+            <argument />
+            <argument type="service" id="security.authentication.success_handler" />
+            <argument type="service" id="security.authentication.failure_handler" />
+            <argument type="service" id="logger" on-invalid="null" />
+            <argument type="service" id="cas.service" />
+            <argument />
         </service>
 
         <service id="cas.security.handler.logout" class="%auth_cas_logout_handler.class%">
