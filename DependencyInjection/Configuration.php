@@ -20,6 +20,7 @@ class Configuration implements ConfigurationInterface
                 ->scalarNode('cert')->defaultFalse()->end()
                 ->scalarNode('username_attribute')->end()
                 ->scalarNode('proxy')->defaultFalse()->end()
+                ->scalarNode('callback')->defaultFalse()->end()
             ->end()
         ;
 

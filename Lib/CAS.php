@@ -104,8 +104,18 @@ class CAS
             throw new \Exception('You should call this method only in proxy mode');
         }
 
-        return sprintf('%s/serviceValidate?service=%s&ticket=%s&pgtUrl=%s',
+        return sprintf('%s/proxyValidate?service=%s&ticket=%s&pgtUrl=%s',
             $this->server, urlencode($serviceUrl), $serviceTicket, urlencode($proxyCallback));
+    }
+
+    public function getProxyServiceUrl($serviceUrl, $pgt)
+    {
+        if (!$this->isProxy()) {
+            throw new \Exception('You should call this method only in proxy mode');
+        }
+
+        return sprintf('%s/proxy?targetService=%s&pgt=%s',
+            $this->server, urlencode($serviceUrl), $pgt);
     }
 
     public function getUsernameAttribute()

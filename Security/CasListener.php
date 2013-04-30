@@ -2,9 +2,9 @@
 
 namespace Rizeway\Bundle\CasBundle\Security;
 
-use Guzzle\Service\Client;
 use Rizeway\Bundle\CasBundle\Lib\CAS;
-use Symfony\Component\DomCrawler\Crawler;
+use Rizeway\Bundle\CasBundle\Lib\Storage;
+use Rizeway\Bundle\CasBundle\Lib\Client;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -29,6 +29,26 @@ class CasListener implements ListenerInterface
      * @var \Rizeway\Bundle\CasBundle\Lib\CAS
      */
     protected $cas;
+
+    /**
+     * @var \Rizeway\Bundle\CasBundle\Lib\Storage
+     */
+    protected $storage;
+
+    /**
+     * @var \Rizeway\Bundle\CasBundle\Lib\Client
+     */
+    protected $client;
+
+    /**
+     * @var string
+     */
+    protected $checkPath;
+
+    /**
+     * @var string
+     */
+    protected $callbackBaseUrl;
 
     /**
      * @var \Symfony\Component\Security\Core\SecurityContextInterface
@@ -56,31 +76,30 @@ class CasListener implements ListenerInterface
     protected $httpUtils;
 
     /**
-     * @var string
-     */
-    protected $checkPath;
-
-    /**
      * @var \Symfony\Component\Security\Http\Session\SessionAuthenticationStrategyInterface
      */
     protected $sessionStrategy;
 
+
     /**
      * @param SecurityContextInterface $securityContext
      * @param AuthenticationManagerInterface $authenticationManager
-     * @param HttpUtils $httpUtils
-     * @param LoggerInterface $logger
-     * @param AuthenticationSuccessHandlerInterface $successHandler
      * @param SessionAuthenticationStrategyInterface $sessionStrategy
-     * @param AuthenticationFailureHandlerInterface $failureHandler
+     * @param HttpUtils $httpUtils
      * @param $providerKey
+     * @param AuthenticationSuccessHandlerInterface $successHandler
+     * @param AuthenticationFailureHandlerInterface $failureHandler
+     * @param LoggerInterface $logger
      * @param CAS $cas
+     * @param Storage $storage
+     * @param Client $client
+     * @param $callback
      * @param $checkPath
      */
     public function __construct(SecurityContextInterface $securityContext, AuthenticationManagerInterface $authenticationManager,
         SessionAuthenticationStrategyInterface $sessionStrategy, HttpUtils $httpUtils, $providerKey,
         AuthenticationSuccessHandlerInterface $successHandler, AuthenticationFailureHandlerInterface $failureHandler,
-        LoggerInterface $logger = null, CAS $cas, $checkPath)
+        LoggerInterface $logger = null, CAS $cas, Storage $storage, Client $client, $callbackBaseUrl, $checkPath)
     {
         $this->cas = $cas;
         $this->securityContext = $securityContext;
@@ -92,6 +111,9 @@ class CasListener implements ListenerInterface
         $this->httpUtils = $httpUtils;
         $this->sessionStrategy = $sessionStrategy;
         $this->providerKey = $providerKey;
+        $this->storage = $storage;
+        $this->client = $client;
+        $this->callbackBaseUrl = $callbackBaseUrl;
     }
 
     /**
@@ -114,6 +136,8 @@ class CasListener implements ListenerInterface
             return;
         } elseif ($this->cas->isProxy() && $request->get('pgtIou')) {
             $this->log('CAS authentication : Server Callback PGTIou '.$request->get('pgtIou'));
+
+            $this->storage->addPgt($request->get('pgtId'), $request->get('pgtIou'));
             $response = new Response("done", 200, array('Content-Length' => '4'));
             $event->setResponse($response);
             return;
@@ -171,54 +195,20 @@ class CasListener implements ListenerInterface
         }
 
         $this->log('CAS authentication : Validation Request');
-        // Ticket Got, Validate the ticket
-        if ($cert = $this->cas->getCert()) {
-            $options = array(
-                CURLOPT_SSL_VERIFYHOST => 0,
-                CURLOPT_SSL_VERIFYPEER => 1,
-                CURLOPT_RETURNTRANSFER => 1,
-                CURLOPT_CAINFO => $this->cas->getCert()
-            );
-        } else {
-            $options = array(
-                CURLOPT_SSL_VERIFYHOST => 0,
-                CURLOPT_SSL_VERIFYPEER => 0,
-                CURLOPT_RETURNTRANSFER => 1
-            );
-        }
-
-        if (!$this->cas->isProxy()) {
-            $curl = curl_init($this->cas->getValidationUrl($service, $request->get('ticket')));
-        } else {
-            $callback = "https://localhost:443/vagrant/app_dev.php".$this->checkPath."?callbackProxy=true";
-            $curl = curl_init($this->cas->getProxyValidationUrl($service, $request->get('ticket'), $callback));
-        }
-        curl_setopt_array($curl, $options);
-
-        $curlResponse = curl_exec($curl);
-        if (!$curlResponse) {
-            throw new \Exception("Error in CAS Validation Request : ". curl_error($curl));
-        }
-
-        $document = new \DOMDocument();
-        $document->loadXML($curlResponse);
-        $attributes = $document->getElementsByTagName('attributes');
-        if (!$attributes->length) {
-            throw new \Exception("Invalid CAS Validation Response");
-        }
-
-        $this->log('CAS authentication : Parsing Validation Response');
-        $user = $document->getElementsByTagName($this->cas->getUsernameAttribute())->item(0)->textContent;
-        $credentials = array('ROLE_USER');
-        $token = new PreAuthenticatedToken($user, $credentials, $this->providerKey);
         if ($this->cas->isProxy()) {
-            if (!$document->getElementsByTagName('proxyGrantingTicket')->length) {
-                throw new \Exception("No proxy ticket found in validation request");
-            }
-            $token->setAttribute('pgt', $document->getElementsByTagName('proxyGrantingTicket')->item(0)->textContent);
+            $callback = $this->callbackBaseUrl.$this->checkPath."?callbackProxy=true";
+            $validationResult = $this->client->validateServiceTicket($service, $request->get('ticket'), $callback);
+        } else {
+            $validationResult = $this->client->validateServiceTicket($service, $request->get('ticket'));
+        }
+        $credentials = array('ROLE_USER');
+        $token = new PreAuthenticatedToken($validationResult['user'], $credentials, $this->providerKey);
+
+        if ($this->cas->isProxy()) {
+            $token->setAttribute('pgt', $this->storage->getPgt($validationResult['pgtiou']));
         }
 
-        $this->log(sprintf('CAS authentication success: %s', $user));
+        $this->log(sprintf('CAS authentication success: %s', $validationResult['user']));
 
         return $this->authenticationManager->authenticate($token);
     }
@@ -254,6 +244,9 @@ class CasListener implements ListenerInterface
         return $response;
     }
 
+    /**
+     * @param $message
+     */
     private function log($message)
     {
         if (null !== $this->logger) {

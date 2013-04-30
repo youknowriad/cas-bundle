@@ -6,42 +6,56 @@
 
    <parameters>
        <parameter key="auth_cas_service.class">Rizeway\Bundle\CasBundle\Lib\CAS</parameter>
+       <parameter key="auth_cas_client.class">Rizeway\Bundle\CasBundle\Lib\Client</parameter>
+       <parameter key="auth_cas_storage.class">Rizeway\Bundle\CasBundle\Lib\Storage</parameter>
+       <parameter key="auth_cas_storage.filename">/tmp/casTickets.json</parameter>
        <parameter key="auth_cas_listener_class">Rizeway\Bundle\CasBundle\Security\CasListener</parameter>
        <parameter key="auth_cas_entry_point.class">Rizeway\Bundle\CasBundle\Security\CasAuthenticationEntryPoint</parameter>
        <parameter key="auth_cas_logout_handler.class">Rizeway\Bundle\CasBundle\Security\LogoutSuccessHandler</parameter>
    </parameters>
 
    <services>
-        <service id="cas.service" class="%auth_cas_service.class%">
-            <argument>%rizeway_cas.url%</argument>
-            <argument>%rizeway_cas.server%</argument>
-            <argument>%rizeway_cas.cert%</argument>
-            <argument>%rizeway_cas.username_attribute%</argument>
-            <argument>%rizeway_cas.proxy%</argument>
+       <service id="cas.service" class="%auth_cas_service.class%">
+           <argument>%rizeway_cas.url%</argument>
+           <argument>%rizeway_cas.server%</argument>
+           <argument>%rizeway_cas.cert%</argument>
+           <argument>%rizeway_cas.username_attribute%</argument>
+           <argument>%rizeway_cas.proxy%</argument>
         </service>
 
-        <service id="cas.security.authentication.listener"
+       <service id="cas.client" class="%auth_cas_client.class%">
+           <argument type="service" id="cas.service" />
+       </service>
+
+       <service id="cas.storage" class="%auth_cas_storage.class%">
+           <argument>%auth_cas_storage.filename%</argument>
+       </service>
+
+       <service id="cas.security.authentication.listener"
                  class="%auth_cas_listener_class%"
                  abstract="true">
-            <tag name="monolog.logger" channel="security" />
-            <argument type="service" id="security.context" />
-            <argument type="service" id="security.authentication.manager" />
-            <argument type="service" id="security.authentication.session_strategy" />
-            <argument type="service" id="security.http_utils" />
-            <argument />
-            <argument type="service" id="security.authentication.success_handler" />
-            <argument type="service" id="security.authentication.failure_handler" />
-            <argument type="service" id="logger" on-invalid="null" />
-            <argument type="service" id="cas.service" />
-            <argument />
-        </service>
+           <tag name="monolog.logger" channel="security" />
+           <argument type="service" id="security.context" />
+           <argument type="service" id="security.authentication.manager" />
+           <argument type="service" id="security.authentication.session_strategy" />
+           <argument type="service" id="security.http_utils" />
+           <argument />
+           <argument type="service" id="security.authentication.success_handler" />
+           <argument type="service" id="security.authentication.failure_handler" />
+           <argument type="service" id="logger" on-invalid="null" />
+           <argument type="service" id="cas.service" />
+           <argument type="service" id="cas.storage" />
+           <argument type="service" id="cas.client" />
+           <argument>%rizeway_cas.callback%</argument>
+           <argument />
+       </service>
 
-        <service id="cas.security.handler.logout" class="%auth_cas_logout_handler.class%">
-            <argument type="service" id="cas.service" />
-        </service>
+       <service id="cas.security.handler.logout" class="%auth_cas_logout_handler.class%">
+           <argument type="service" id="cas.service" />
+       </service>
 
-        <service id="cas.security.authentication.cas_entry_point" class="%auth_cas_entry_point.class%" public="false" abstract="true">
-            <argument type="service" id="http_kernel" />
-        </service>
+       <service id="cas.security.authentication.cas_entry_point" class="%auth_cas_entry_point.class%" public="false" abstract="true">
+           <argument type="service" id="http_kernel" />
+       </service>
    </services>
 </container>
