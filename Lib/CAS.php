@@ -108,6 +108,12 @@ class CAS
             $this->server, urlencode($serviceUrl), $serviceTicket, urlencode($proxyCallback));
     }
 
+    /**
+     * @param $serviceUrl
+     * @param $pgt
+     * @return string
+     * @throws \Exception
+     */
     public function getProxyServiceUrl($serviceUrl, $pgt)
     {
         if (!$this->isProxy()) {
@@ -118,8 +124,19 @@ class CAS
             $this->server, urlencode($serviceUrl), $pgt);
     }
 
+    /**
+     * @return string
+     */
     public function getUsernameAttribute()
     {
         return $this->usernameAttribute;
+    }
+
+    /**
+     * @return string
+     */
+    public function getServerUrl()
+    {
+        return $this->server;
     }
 }
