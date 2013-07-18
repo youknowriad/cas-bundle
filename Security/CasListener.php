@@ -190,6 +190,10 @@ class CasListener implements ListenerInterface
 
         // Redirect To Login
         if (!$request->get('ticket', false)) {
+            if ($request->isXmlHttpRequest() && !$request->get('forceRedirect', false)) {
+                return new Response('Unauthorized', 401);
+            }
+
             $this->log('CAS authentication : Redirect to CAS Login page');
             return new RedirectResponse($this->cas->getLoginUrl($service));
         }
